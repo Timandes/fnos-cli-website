@@ -10,8 +10,8 @@
 
 ## 首页结构
 
-- 顶栏：fnos-cli 字标、首页、GitHub、npm。
-- 首屏：小字 `fnOS × Command Line`，标题「用命令行，连接你的 fnOS。」，副标题「飞牛 fnOS 的命令行客户端。」，以及「查询系统状态，管理多台设备，让日常操作融入脚本。」。
+- 顶栏：`飞牛fnOS CLI` 字标、首页、GitHub、npm。
+- 首屏：小字 `飞牛 fnOS × Command Line`，标题「用命令行，连接你的飞牛 fnOS」，副标题「飞牛 fnOS 的命令行客户端。」，以及「查询系统状态，管理多台设备，让日常操作融入脚本。」。
 - 操作：「快速开始」滚动到安装位置；「查看 GitHub」跳转源仓库。
 - 安装：`npm install -g fnos-cli`，可复制，显示成功或失败反馈。
 - 示例：`fnos --help`、`fnos resmon cpu`、`fnos docker listContainers --all true`。

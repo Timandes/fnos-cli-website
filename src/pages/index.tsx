@@ -47,11 +47,11 @@ export default function Home(): ReactNode {
   }
 
   return (
-    <Layout title="用命令行，连接你的 fnOS" description="飞牛 fnOS 的命令行客户端。查询系统状态，管理多台设备，让日常操作融入脚本。" noFooter>
+    <Layout title="用命令行，连接你的飞牛 fnOS" description="飞牛 fnOS 的命令行客户端。查询系统状态，管理多台设备，让日常操作融入脚本。" noFooter>
       <div className={styles.page}>
         <header className={styles.header}>
           <div className={styles.headerInner}>
-            <a href="/" className={styles.wordmark} aria-label="fnos-cli 首页">fnos-cli</a>
+            <a href="/" className={styles.wordmark} aria-label="飞牛fnOS CLI 首页">飞牛fnOS CLI</a>
             <nav aria-label="主导航" className={styles.nav}>
               <a href="/" aria-current="page" className={styles.activeLink}>首页</a>
               <ExternalLink href={githubUrl}>GitHub <span aria-hidden="true">↗</span></ExternalLink>
@@ -62,8 +62,8 @@ export default function Home(): ReactNode {
 
         <main id="main-content" className={styles.main}>
           <section className={styles.hero} aria-labelledby="hero-title">
-            <p className={styles.eyebrow}>fnOS <span aria-hidden="true">×</span> Command Line</p>
-            <h1 id="hero-title"><span>用命令行，</span><wbr /><span>连接你的 fnOS。</span></h1>
+            <p className={styles.eyebrow}>飞牛 fnOS <span aria-hidden="true">×</span> Command Line</p>
+            <h1 id="hero-title"><span>用命令行，</span><wbr /><span>连接你的飞牛 fnOS</span></h1>
             <p className={styles.description}>
               <span>飞牛 fnOS 的命令行客户端。</span>
               <span>查询系统状态，管理多台设备，让日常操作融入脚本。</span>
