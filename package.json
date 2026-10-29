@@ -1,0 +1,36 @@
+{
+  "name": "fnos-cli-website",
+  "version": "0.1.0",
+  "private": true,
+  "description": "fnos-cli 的极简中文门户",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "docusaurus start --host 127.0.0.1",
+    "build": "docusaurus build",
+    "serve": "docusaurus serve --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "clear": "docusaurus clear"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.10.2",
+    "@docusaurus/preset-classic": "3.10.2",
+    "@mdx-js/react": "^3.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "3.10.2",
+    "@docusaurus/tsconfig": "3.10.2",
+    "@docusaurus/types": "3.10.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "~5.9.3"
+  },
+  "engines": {
+    "node": ">=20.0"
+  },
+  "browserslist": {
+    "production": [">0.5%", "not dead", "not op_mini all"],
+    "development": ["last 3 chrome versions", "last 3 firefox versions", "last 5 safari versions"]
+  }
+}

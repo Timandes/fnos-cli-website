@@ -1,0 +1,489 @@
+.page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  color: #121925;
+  background: #fff;
+}
+
+.header {
+  border-bottom: 1px solid #edf0f4;
+}
+
+.headerInner,
+.footerInner {
+  width: min(1280px, calc(100% - 96px));
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerInner {
+  min-height: 76px;
+}
+
+.wordmark {
+  color: #111827;
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -0.065em;
+}
+
+.wordmark:hover {
+  color: #111827;
+}
+
+.nav {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #53627a;
+}
+
+.nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: inherit;
+}
+
+.nav a:hover,
+.nav .activeLink {
+  color: #2563eb;
+}
+
+.activeLink::after {
+  position: absolute;
+  bottom: 0;
+  inset-inline: 0;
+  height: 2px;
+  background: #2563eb;
+  content: '';
+}
+
+.main {
+  flex: 1;
+}
+
+.hero {
+  padding: 62px 24px 0;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 26px;
+  color: #2563eb;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(34px, 4.6vw, 62px);
+  line-height: 1.25;
+  letter-spacing: -0.055em;
+  font-weight: 750;
+  text-wrap: balance;
+}
+
+.hero h1 span {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.description {
+  margin: 25px 0 0;
+  color: #6c7a90;
+  font-size: 20px;
+  line-height: 1.85;
+  font-weight: 400;
+}
+
+.description span {
+  display: block;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 32px;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 156px;
+  min-height: 52px;
+  padding: 12px 25px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 600;
+  transition: background-color 140ms, border-color 140ms;
+}
+
+.primaryButton {
+  background: #2563eb;
+  color: #fff;
+}
+
+.primaryButton:hover {
+  color: #fff;
+  background: #1d4ed8;
+}
+
+.secondaryButton {
+  border-color: #dce2eb;
+  background: #fff;
+  color: #253246;
+}
+
+.secondaryButton:hover {
+  border-color: #aab8ce;
+  background: #f8fafc;
+  color: #253246;
+}
+
+.commands {
+  width: min(960px, calc(100% - 48px));
+  margin: 32px auto 0;
+}
+
+.install {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-height: 70px;
+  padding: 10px 18px 10px 26px;
+  border-radius: 11px;
+  background: #f3f6fa;
+  scroll-margin-top: 24px;
+}
+
+.installLabel {
+  flex-shrink: 0;
+  border-right: 1px solid #cfd7e4;
+  padding-right: 28px;
+  color: #56657c;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.installCode {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font-size: 17px;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+
+.copyButton {
+  display: inline-flex;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: #607088;
+  background: transparent;
+  cursor: pointer;
+}
+
+.copyButton:hover {
+  background: #e6ecf5;
+  color: #2563eb;
+}
+
+.copied {
+  color: #2563eb;
+}
+
+.copyError {
+  margin: 10px 0 0;
+  color: #b42318;
+  font-size: 14px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.examples {
+  margin-top: 18px;
+  padding: 20px 26px 22px;
+  border-radius: 11px;
+  background: #f3f6fa;
+}
+
+.examples h2 {
+  margin: 0 0 15px;
+  color: #56657c;
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.codeScroll {
+  overflow-x: auto;
+}
+
+.examples pre {
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  color: #253246;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.examples code {
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+
+.codeLine {
+  display: flex;
+  gap: 28px;
+}
+
+.lineNumber {
+  min-width: 10px;
+  color: #9aa8ba;
+  user-select: none;
+}
+
+.commandName {
+  color: #2563eb;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 42px;
+  width: min(1280px, calc(100% - 96px));
+  margin: 56px auto 42px;
+}
+
+.feature {
+  padding-top: 27px;
+  border-top: 1px solid #dce2eb;
+}
+
+.feature h2 {
+  margin: 0 0 11px;
+  color: #182131;
+  font-size: 22px;
+  line-height: 1.5;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.feature p {
+  margin: 0;
+  color: #6c7a90;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.footer {
+  border-top: 1px solid #edf0f4;
+  color: #708098;
+  font-size: 13px;
+}
+
+.footerInner {
+  min-height: 70px;
+  gap: 20px;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer p span {
+  margin-inline: 5px;
+}
+
+.footer nav {
+  display: flex;
+  gap: 26px;
+}
+
+.footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+}
+
+.footer a:hover {
+  color: #2563eb;
+}
+
+@media (max-width: 760px) {
+  .headerInner,
+  .footerInner,
+  .features {
+    width: calc(100% - 40px);
+  }
+
+  .headerInner {
+    min-height: 68px;
+  }
+
+  .wordmark {
+    font-size: 22px;
+  }
+
+  .nav {
+    gap: 20px;
+    font-size: 14px;
+  }
+
+  .hero {
+    padding: 54px 20px 0;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-size: clamp(34px, 7vw, 48px);
+    line-height: 1.35;
+  }
+
+  .description {
+    margin-top: 22px;
+    font-size: 16px;
+  }
+
+  .description span + span {
+    max-width: 380px;
+    margin: 5px auto 0;
+  }
+
+  .actions {
+    margin-top: 26px;
+    gap: 12px;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    min-width: 142px;
+    min-height: 48px;
+    padding: 11px 20px;
+    font-size: 15px;
+  }
+
+  .commands {
+    width: calc(100% - 40px);
+    margin-top: 30px;
+  }
+
+  .install {
+    gap: 12px;
+    min-height: 64px;
+    padding: 9px 10px 9px 16px;
+  }
+
+  .installLabel {
+    padding-right: 12px;
+    font-size: 13px;
+  }
+
+  .installCode,
+  .examples pre {
+    font-size: 13px;
+  }
+
+  .examples {
+    padding: 18px 16px 20px;
+  }
+
+  .codeLine {
+    gap: 18px;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    margin-top: 42px;
+    margin-bottom: 36px;
+  }
+
+  .feature {
+    padding-top: 20px;
+  }
+
+  .feature h2 {
+    font-size: 19px;
+    margin-bottom: 7px;
+  }
+
+  .feature p {
+    font-size: 15px;
+  }
+
+  .footerInner {
+    min-height: 74px;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-block: 12px;
+  }
+
+  .footer nav {
+    gap: 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .nav {
+    gap: 14px;
+  }
+
+  .installLabel {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryButton,
+  .secondaryButton {
+    transition: none;
+  }
+}
