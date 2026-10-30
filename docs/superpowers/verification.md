@@ -1,5 +1,13 @@
 # 首页交付验证
 
+## 2026-10-30 管道安装命令
+
+- Linux/macOS 的显示与复制命令改为 `curl -fsSL https://fnos.timandes.cn/install.sh | bash`，不再先保存 `fnos-install.sh`；保留 Bash 兼容要求及可选的手动下载链接。
+- Windows CMD/PowerShell 原本已按 UTF-8 解码后在内存执行，无需保存下载脚本，保持原有兼容处理。
+- 浏览器实测 Linux、macOS Tab 的显示、复制反馈和实际剪贴板内容；生产 HTML 不再包含旧的保存文件命令。
+- 本地 HTTP 管道在隔离 HOME、npm 命令替身环境下验证成功和失败两条路径：当前工作目录均无脚本残留，TMPDIR 均已清空；未修改实际 nvm 环境。
+- `npm test` 25/25、`npm run typecheck`、`npm run build`、`git diff --check` 通过。
+
 ## 2026-10-30 nvm 安装完成提示
 
 - 修复清理旧安装器配置后仍提示手动添加 nvm 版本目录到 PATH 的问题；已有 npm 命令目录位于 PATH 时不显示手动添加指引，仅按需提示重新打开终端。
