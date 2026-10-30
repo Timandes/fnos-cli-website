@@ -5,15 +5,63 @@ $previousConsoleOutputEncoding = [Console]::OutputEncoding
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-function Test-FnosRuntime {
+function Test-InstallerPath([string]$path) {
+    $root = $installRoot.TrimEnd('\')
+    return ($path -ieq $root -or $path.StartsWith($root + '\', [StringComparison]::OrdinalIgnoreCase))
+}
+
+function Get-FnosRuntime([switch]$ExternalOnly) {
+    $nodes = @(Get-Command node.exe -All -CommandType Application -ErrorAction SilentlyContinue)
+    $npms = @(Get-Command npm.cmd -All -CommandType Application -ErrorAction SilentlyContinue)
+    foreach ($node in $nodes) {
+        if ($ExternalOnly -and (Test-InstallerPath $node.Source)) { continue }
+        try {
+            $nodeVersion = & $node.Source --version 2>$null
+            if ($LASTEXITCODE -ne 0 -or $nodeVersion -notmatch '^v(\d+)\.(\d+)\.') { continue }
+            if ([int]$Matches[1] -lt 18 -or ([int]$Matches[1] -eq 18 -and [int]$Matches[2] -lt 17)) { continue }
+            $savedPath = $env:PATH
+            try {
+                $env:PATH = (Split-Path -Parent $node.Source) + ';' + $env:PATH
+                foreach ($npm in $npms) {
+                    if ($ExternalOnly -and (Test-InstallerPath $npm.Source)) { continue }
+                    $npmVersion = & $npm.Source --version 2>$null
+                    if ($LASTEXITCODE -eq 0 -and $npmVersion -match '^(\d+)\.' -and [int]$Matches[1] -ge 8) {
+                        return [pscustomobject]@{ Node = $node.Source; Npm = $npm.Source }
+                    }
+                }
+            } finally { $env:PATH = $savedPath }
+        } catch { continue }
+    }
+    return $null
+}
+
+function Get-NpmGlobalPath([string]$command) {
+    $value = (& $npmPath $command --global 2>$null | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or -not $value -or $value -match '[\r\n]' -or -not [IO.Path]::IsPathRooted($value)) {
+        throw '无法读取当前 npm 的全局安装目录，请检查 npm 配置后重试。'
+    }
+    return [IO.Path]::GetFullPath($value)
+}
+
+function Test-DirectoryWritable([string]$path) {
+    $probe = $null
     try {
-        if (-not (Get-Command node.exe -ErrorAction SilentlyContinue) -or -not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) { return $false }
-        $nodeVersion = & node.exe --version 2>$null
-        if ($LASTEXITCODE -ne 0 -or $nodeVersion -notmatch '^v(\d+)\.(\d+)\.') { return $false }
-        if ([int]$Matches[1] -lt 18 -or ([int]$Matches[1] -eq 18 -and [int]$Matches[2] -lt 17)) { return $false }
-        $npmVersion = & npm.cmd --version 2>$null
-        return ($LASTEXITCODE -eq 0 -and $npmVersion -match '^(\d+)\.' -and [int]$Matches[1] -ge 8)
+        $parent = $path
+        while (-not (Test-Path -LiteralPath $parent -PathType Container)) {
+            if (Test-Path -LiteralPath $parent) { return $false }
+            $parent = Split-Path -Parent $parent
+            if (-not $parent) { return $false }
+        }
+        $probe = Join-Path $parent ('.fnos-write-' + [Guid]::NewGuid().ToString('N'))
+        $stream = [IO.File]::Open($probe, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write)
+        $stream.Dispose()
+        return $true
     } catch { return $false }
+    finally { if ($probe -and (Test-Path -LiteralPath $probe)) { Remove-Item -LiteralPath $probe -Force -ErrorAction SilentlyContinue } }
+}
+
+function Test-PathEntry([string]$path, [string]$entry) {
+    return (@($path -split ';' | Where-Object { $_.TrimEnd('\') -ieq $entry.TrimEnd('\') }).Count -gt 0)
 }
 
 $workDir = $null
@@ -22,15 +70,19 @@ try {
     $installRoot = Join-Path $env:LOCALAPPDATA 'fnos-cli'
     $prefix = Join-Path $installRoot 'npm'
     $binDir = Join-Path $installRoot 'bin'
-    Write-Host '正在为当前用户安装 fnos-cli……'
+    Write-Host '正在检查 fnos-cli 安装环境……'
 
     $runtimeRecord = Join-Path $installRoot 'node-path.txt'
-    if (-not (Test-FnosRuntime) -and (Test-Path -LiteralPath $runtimeRecord)) {
+    # Prefer the caller's Node/npm, even when an old installer runtime is on PATH.
+    $runtime = Get-FnosRuntime -ExternalOnly
+    $useExistingNpm = $null -ne $runtime
+    if (-not $runtime -and (Test-Path -LiteralPath $runtimeRecord)) {
         $savedRuntime = (Get-Content -LiteralPath $runtimeRecord -Encoding UTF8 -Raw).Trim()
         if (Test-Path -LiteralPath (Join-Path $savedRuntime 'node.exe')) { $env:PATH = "$savedRuntime;$env:PATH" }
     }
 
-    if (-not (Test-FnosRuntime)) {
+    if (-not $runtime) { $runtime = Get-FnosRuntime }
+    if (-not $runtime) {
         $osArch = $env:PROCESSOR_ARCHITECTURE
         if ($env:PROCESSOR_ARCHITEW6432) { $osArch = $env:PROCESSOR_ARCHITEW6432 }
         switch ($osArch) {
@@ -58,42 +110,77 @@ try {
         if (Test-Path -LiteralPath $runtimeDir) { $runtimeDir += '-' + [Guid]::NewGuid().ToString('N') }
         Move-Item -LiteralPath (Join-Path $workDir $runtimeName) -Destination $runtimeDir
         $env:PATH = "$runtimeDir;$env:PATH"
-        if (-not (Test-FnosRuntime)) { throw 'Node.js 无法运行，请使用受支持的 Windows 10/11 或 Windows Server 版本。' }
+        $runtime = Get-FnosRuntime
+        if (-not $runtime) { throw 'Node.js 无法运行，请使用受支持的 Windows 10/11 或 Windows Server 版本。' }
         [IO.File]::WriteAllText($runtimeRecord, $runtimeDir, [Text.UTF8Encoding]::new($false))
     }
 
-    $nodePath = (Get-Command node.exe -CommandType Application).Source
-    $npmPath = (Get-Command npm.cmd -CommandType Application).Source
-    Write-Host '正在通过 npm 安装最新版本的 fnos-cli……'
-    & $npmPath install --global --prefix $prefix fnos-cli@latest
-    if ($LASTEXITCODE -ne 0) { throw "npm 安装失败（退出码：$LASTEXITCODE），请检查网络连接后重试。" }
-    $cliPath = Join-Path $prefix 'node_modules\fnos-cli\bin\fnos'
-    if (-not (Test-Path -LiteralPath $cliPath)) { throw 'npm 未生成 fnos 可执行文件，请重新安装。' }
-    & $nodePath $cliPath --version
-    if ($LASTEXITCODE -ne 0) { throw '安装的 fnos-cli 无法运行，请重新安装。' }
+    $nodePath = $runtime.Node
+    $npmPath = $runtime.Npm
+    $env:PATH = (Split-Path -Parent $nodePath) + ';' + $env:PATH
+    if ($useExistingNpm) {
+        $globalPrefix = Get-NpmGlobalPath 'prefix'
+        $globalRoot = Get-NpmGlobalPath 'root'
+        $existingCommands = @(Get-Command fnos, fnos.cmd, fnos.ps1 -All -CommandType Application, ExternalScript -ErrorAction SilentlyContinue |
+            Where-Object { -not (Test-InstallerPath $_.Source) })
+        $hasExistingCli = (Test-Path -LiteralPath (Join-Path $globalRoot 'fnos-cli')) -or $existingCommands.Count -gt 0
+        if (-not (Test-DirectoryWritable $globalPrefix) -or -not (Test-DirectoryWritable $globalRoot)) {
+            if ($hasExistingCli) { throw "当前 npm 全局安装目录不可写（$globalPrefix）。检测到已有 fnos-cli，请修复该环境的目录权限后重试。" }
+            Write-Host '当前 npm 全局安装目录不可写，将安装到独立的用户目录。'
+            $useExistingNpm = $false
+        }
+    }
 
-    New-Item -ItemType Directory -Path $binDir -Force | Out-Null
-    # Expose only a CMD launcher; npm-generated .ps1 shims may be policy-blocked.
-    # Keep the launcher ASCII-only: CMD expands %~dp0 as a Unicode path. A
-    # private copy of the standalone Node executable avoids embedding an
-    # external runtime path that the console's code page cannot represent.
-    $runtimeVersion = (& $nodePath --version).Trim()
-    if ($LASTEXITCODE -ne 0 -or $runtimeVersion -notmatch '^v\d+\.\d+\.\d+$') { throw '无法识别 Node.js 运行环境。' }
-    $launcherNode = 'node-' + $runtimeVersion + '.exe'
-    $launcherNodePath = Join-Path $binDir $launcherNode
-    if (-not (Test-Path -LiteralPath $launcherNodePath)) { Copy-Item -LiteralPath $nodePath -Destination $launcherNodePath }
-    $launcher = "@echo off`r`n`"%~dp0$launcherNode`" `"%~dp0..\npm\node_modules\fnos-cli\bin\fnos`" %*`r`nexit /b %errorlevel%`r`n"
-    $launcherPath = Join-Path $binDir 'fnos.cmd'
-    [IO.File]::WriteAllText($launcherPath, $launcher, [Text.Encoding]::ASCII)
+    Write-Host '正在通过 npm 安装最新版本的 fnos-cli……'
+    if ($useExistingNpm) {
+        # Respect nvm and custom npm prefixes; never write npm's global config.
+        & $npmPath install --global fnos-cli@latest
+    } else {
+        & $npmPath install --global --prefix $prefix fnos-cli@latest
+    }
+    if ($LASTEXITCODE -ne 0) { throw "npm 安装失败（退出码：$LASTEXITCODE），请检查当前 npm 环境和网络连接后重试。" }
+
+    if ($useExistingNpm) {
+        $launcherPath = Join-Path $globalPrefix 'fnos.cmd'
+        if (-not (Test-Path -LiteralPath $launcherPath -PathType Leaf)) { throw 'npm 未生成原生 fnos.cmd 启动器，请检查当前 npm 环境。' }
+    } else {
+        $cliPath = Join-Path $prefix 'node_modules\fnos-cli\bin\fnos'
+        if (-not (Test-Path -LiteralPath $cliPath -PathType Leaf)) { throw 'npm 未生成 fnos 可执行文件，请重新安装。' }
+        New-Item -ItemType Directory -Path $binDir -Force | Out-Null
+        # Keep the private launcher ASCII-only so Unicode user paths work in CMD.
+        $runtimeVersion = (& $nodePath --version).Trim()
+        if ($LASTEXITCODE -ne 0 -or $runtimeVersion -notmatch '^v\d+\.\d+\.\d+$') { throw '无法识别 Node.js 运行环境。' }
+        $launcherNode = 'node-' + $runtimeVersion + '.exe'
+        $launcherNodePath = Join-Path $binDir $launcherNode
+        if (-not (Test-Path -LiteralPath $launcherNodePath)) { Copy-Item -LiteralPath $nodePath -Destination $launcherNodePath }
+        $launcher = "@echo off`r`n`"%~dp0$launcherNode`" `"%~dp0..\npm\node_modules\fnos-cli\bin\fnos`" %*`r`nexit /b %errorlevel%`r`n"
+        $launcherPath = Join-Path $binDir 'fnos.cmd'
+        [IO.File]::WriteAllText($launcherPath, $launcher, [Text.Encoding]::ASCII)
+    }
+    # Verify the actual launcher and print the CLI version exactly once.
     & $launcherPath --version
-    if ($LASTEXITCODE -ne 0) { throw '生成的 fnos 启动器无法运行，请重新安装。' }
+    if ($LASTEXITCODE -ne 0) { throw '安装的 fnos-cli 无法运行，请检查当前安装环境后重试。' }
+
+    # Only change PATH after successful installation and launcher verification.
     $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-    $pathParts = @($userPath -split ';' | Where-Object { $_ -and $_.TrimEnd('\') -ine $binDir.TrimEnd('\') })
-    $newPath = (@($binDir) + $pathParts) -join ';'
-    [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
-    $env:PATH = "$binDir;$env:PATH"
+    $pathParts = @($userPath -split ';' | Where-Object { $_.TrimEnd('\') -ine $binDir.TrimEnd('\') })
+    $newPath = $pathParts -join ';'
+    $env:PATH = (@($env:PATH -split ';' | Where-Object { $_.TrimEnd('\') -ine $binDir.TrimEnd('\') })) -join ';'
+    if ($useExistingNpm) {
+        if (-not (Test-PathEntry $env:PATH $globalPrefix)) {
+            if (-not (Test-PathEntry $newPath $globalPrefix)) {
+                $newPath = if ($newPath) { "$globalPrefix;$newPath" } else { $globalPrefix }
+            }
+            $env:PATH = "$globalPrefix;$env:PATH"
+        }
+    } else {
+        $newPath = if ($newPath) { "$binDir;$newPath" } else { $binDir }
+        $env:PATH = "$binDir;$env:PATH"
+    }
+    $pathChanged = $newPath -cne $userPath
+    if ($pathChanged) { [Environment]::SetEnvironmentVariable('Path', $newPath, 'User') }
     # Notify Explorer so terminals opened after installation inherit the new PATH.
-    try {
+    if ($pathChanged) { try {
         if (-not ('Fnos.EnvironmentBroadcast' -as [type])) {
             Add-Type -TypeDefinition @'
 using System;
@@ -110,9 +197,23 @@ namespace Fnos {
         [Fnos.EnvironmentBroadcast]::SendMessageTimeout([IntPtr]0xffff, 0x1a, [UIntPtr]::Zero, 'Environment', 2, 5000, [ref]$broadcastResult) | Out-Null
     } catch {
         Write-Warning 'PATH 已保存。如果新打开的终端仍找不到 fnos，请注销 Windows 后重新登录。'
+    } }
+    Write-Host "`n安装完成！"
+    Write-Host "安装位置：$launcherPath"
+    $resolvedFnos = Get-Command fnos -ErrorAction SilentlyContinue
+    $resolvedBin = if ($resolvedFnos -and $resolvedFnos.Source -and [IO.Path]::IsPathRooted($resolvedFnos.Source)) {
+        Split-Path -Parent $resolvedFnos.Source
+    } else { $null }
+    $launcherBin = Split-Path -Parent $launcherPath
+    if ($resolvedBin -and $resolvedBin.TrimEnd('\') -ieq $launcherBin.TrimEnd('\')) {
+        # npm may also create fnos.ps1, which the default execution policy blocks.
+        Write-Host "`n请在终端运行：`n`n  fnos.cmd --help`n"
+        Write-Host "也可以直接运行： & `"$launcherPath`" --help"
+    } else {
+        $resolvedDescription = if ($resolvedBin) { $resolvedFnos.Source } else { [string]$resolvedFnos.CommandType }
+        Write-Host "当前 fnos 由其他目录或命令优先处理：$resolvedDescription"
+        Write-Host "请使用本次安装的 CMD 入口：`n`n  & `"$launcherPath`" --help`n"
     }
-    Write-Host "`n安装完成！请关闭所有终端窗口，重新打开终端后运行：`n`n  fnos --help`n"
-    Write-Host "如果当前终端尚未更新 PATH，请运行： & `"$binDir\fnos.cmd`" --help"
 } catch {
     [Console]::Error.WriteLine("安装失败：$($_.Exception.Message)")
     exit 1

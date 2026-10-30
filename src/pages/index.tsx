@@ -117,7 +117,7 @@ export default function Home(): ReactNode {
           <section className={styles.commands} aria-label="安装与命令示例">
             <div id="install" className={styles.installer}>
               <h2>一键安装</h2>
-              <p className={styles.installIntro}>选择你的系统，复制命令到对应终端运行。脚本会自动补齐 Node.js 和 npm，并安装 fnos-cli，无需管理员权限。</p>
+              <p className={styles.installIntro}>选择你的系统，复制命令到对应终端运行。已有 Node.js 和 npm 时直接复用；缺少时会自动补齐，再安装 fnos-cli。</p>
               <Tabs defaultValue="windows-cmd">
                 {installers.map(installer => (
                   <TabItem key={installer.value} value={installer.value} label={installer.label}>
