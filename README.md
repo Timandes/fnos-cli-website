@@ -32,6 +32,14 @@ npm run serve
 
 首页提供 Windows CMD、Windows PowerShell、Linux、macOS 四个 Tab，可复制命令并下载脚本。下方独立提供已有 npm 用户使用的 `npm install -g fnos-cli`。
 
+Linux/macOS 使用管道直接执行在线脚本，命令不会在当前目录生成 `fnos-install.sh`：
+
+```bash
+curl -fsSL https://fnos.timandes.cn/install.sh | bash
+```
+
+Windows CMD 和 PowerShell 命令下载内容后在内存中执行，同样不保存下载的脚本。安装器用于下载依赖的临时目录会在退出时清理；手动下载脚本的链接仍可按需使用。
+
 | 入口 | 用途 |
 | --- | --- |
 | `https://fnos.timandes.cn/install.cmd` | Windows CMD，引导至同站 PowerShell 安装器 |
