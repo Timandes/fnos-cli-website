@@ -102,6 +102,7 @@ test('updates existing fnos in the active npm environment without a private copy
   assert.ok(!existsSync(path.join(f.home, '.local/share/fnos-cli/bin/fnos')));
   assert.ok(!existsSync(path.join(f.home, '.bashrc')));
   assert.equal(result.stdout.match(/^0\.5\.1$/gm)?.length, 1);
+  assert.doesNotMatch(result.stdout, /export PATH=|fish_add_path/);
 });
 
 test('uses the active npm prefix for a first installation when it is writable', t => {
@@ -130,7 +131,7 @@ test('can use a private installation when the global environment is read-only an
 });
 
 test('removes only the old installer PATH block after updating the npm-managed installation', t => {
-  const f = fixture(t, {installed: true});
+  const f = fixture(t, {installed: true, platform: 'Darwin', arch: 'arm64'});
   const profile = path.join(f.home, '.zshrc');
   const oldBin = path.join(f.home, '.local/share/fnos-cli/bin');
   mkdirSync(oldBin, {recursive: true});
@@ -142,6 +143,8 @@ test('removes only the old installer PATH block after updating the npm-managed i
   assert.equal(readFileSync(profile, 'utf8'), '# 我的配置\nexport KEEP_ME=yes\n# 保留结尾\n');
   assert.equal(readFileSync(oldLauncher, 'utf8'), '#!/bin/bash\necho 0.3.0\n');
   assert.equal(spawnSync(path.join(f.globalPrefix, 'bin/fnos'), ['--version'], {env: f.env, encoding: 'utf8'}).stdout.trim(), '0.5.1');
+  assert.match(result.stdout, /重新打开终端/);
+  assert.doesNotMatch(result.stdout, /export PATH=|fish_add_path/);
 });
 
 test('leaves unrelated shell configuration byte-for-byte unchanged', t => {
@@ -206,6 +209,7 @@ test('reports a shadowing old command without editing unowned PATH settings', t 
   assert.equal(readFileSync(profile, 'utf8'), original);
   assert.doesNotMatch(result.stdout, /当前环境可以直接使用/);
   assert.match(result.stdout, /PATH/);
+  assert.doesNotMatch(result.stdout, /export PATH=|fish_add_path/);
 });
 
 test('a failed npm update leaves the existing CLI and shell configuration intact', t => {
@@ -231,6 +235,7 @@ test('respects a custom npm prefix and enables its native command when missing f
   assert.equal(resolved.status, 0, resolved.stderr);
   assert.equal(resolved.stdout.trim(), path.join(customPrefix, 'bin/fnos'));
   assert.ok(!existsSync(path.join(f.home, '.local/share/fnos-cli/npm')));
+  assert.match(result.stdout, /export PATH=/);
 });
 
 for (const runtime of ['missing', 'old']) {
