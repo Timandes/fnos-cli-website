@@ -5,7 +5,7 @@ const config: Config = {
   title: 'fnos-cli',
   tagline: '飞牛 fnOS 的命令行客户端。',
   favicon: 'img/favicon.svg',
-  url: 'https://fnos.timandes.net',
+  url: 'https://fnos.timandes.cn',
   baseUrl: '/',
   organizationName: 'Timandes',
   projectName: 'fnos-cli-website',

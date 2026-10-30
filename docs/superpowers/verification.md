@@ -1,9 +1,13 @@
 # 首页交付验证
 
+## 2026-10-30 域名更正
+
+- 用户更正正式地址为 `https://fnos.timandes.cn/`；首页四种安装命令、CMD 引导器、站点 canonical 配置和项目说明同步改为 `.cn`。
+
 ## 2026-10-29 跨平台安装更新
 
 - 四个 Tab：Windows CMD、Windows PowerShell、Linux、macOS；下方独立提供 npm 直装命令及复制反馈。
-- 正式站点 URL 已设为 `https://fnos.timandes.net/`；`install.sh`、`install.ps1`、`install.cmd` 随构建发布到根目录。
+- 正式站点 URL 已设为 `https://fnos.timandes.cn/`；`install.sh`、`install.ps1`、`install.cmd` 随构建发布到根目录。
 - 最终 `npm test` 14/14 通过；`npm run typecheck`、`npm run build`、`bash -n static/install.sh`、`git diff --check` 通过。构建脚本与源文件逐字节一致，CI YAML 可解析。
 - 浏览器实测四种安装命令、复制的准确内容、npm 独立复制、拒绝剪贴板后的提示、键盘切换；360px 时页面无横向溢出，四个 Tab 以两列全部展示。测试注入已通过重载恢复，viewport 已复原。
 - 独立只读审阅及修复复核通过；Windows 使用 ASCII 相对路径启动器，避免中文用户路径的控制台码页问题。
