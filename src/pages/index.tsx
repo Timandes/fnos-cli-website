@@ -20,12 +20,12 @@ const installers = [
   },
   {
     value: 'linux', label: 'Linux', script: '/install.sh',
-    command: 'curl -fsSL https://fnos.timandes.cn/install.sh -o fnos-install.sh && bash fnos-install.sh',
+    command: 'curl -fsSL https://fnos.timandes.cn/install.sh | bash',
     help: '打开终端，粘贴命令并按回车。需要 Bash 和 curl，支持使用 glibc 的 x64 / ARM64 发行版。',
   },
   {
     value: 'macos', label: 'macOS', script: '/install.sh',
-    command: 'curl -fsSL https://fnos.timandes.cn/install.sh -o fnos-install.sh && bash fnos-install.sh',
+    command: 'curl -fsSL https://fnos.timandes.cn/install.sh | bash',
     help: '打开「终端」，粘贴命令并按回车。支持 Apple 芯片和 Intel Mac。',
   },
 ];
