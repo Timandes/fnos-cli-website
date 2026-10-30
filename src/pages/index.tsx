@@ -10,12 +10,12 @@ const installCommand = 'npm install -g fnos-cli';
 const installers = [
   {
     value: 'windows-cmd', label: 'Windows CMD', script: '/install.cmd',
-    command: 'powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://fnos.timandes.cn/install.ps1 -ErrorAction Stop | iex"',
+    command: 'powershell -NoProfile -ExecutionPolicy Bypass -Command "[Text.Encoding]::UTF8.GetString((iwr -UseBasicParsing https://fnos.timandes.cn/install.ps1 -ErrorAction Stop).RawContentStream.ToArray()).TrimStart([char]0xfeff) | iex"',
     help: '打开「命令提示符」，粘贴命令并按回车。适用于 Windows 10 / 11，支持 x64 和 ARM64。',
   },
   {
     value: 'windows-powershell', label: 'Windows PowerShell', script: '/install.ps1',
-    command: 'irm https://fnos.timandes.cn/install.ps1 -ErrorAction Stop | iex',
+    command: '[Text.Encoding]::UTF8.GetString((iwr -UseBasicParsing https://fnos.timandes.cn/install.ps1 -ErrorAction Stop).RawContentStream.ToArray()).TrimStart([char]0xfeff) | iex',
     help: '打开 PowerShell，粘贴命令并按回车。适用于 Windows PowerShell 5.1 及以上版本，支持 x64 和 ARM64。',
   },
   {
