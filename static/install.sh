@@ -224,6 +224,8 @@ if (( private_install || path_needed )); then
   esac
 fi
 print_activation() {
+  # Existing npm environments (including nvm) already manage this bin directory.
+  if (( ! private_install && ! path_needed )); then return; fi
   case "${SHELL:-/bin/sh}" in
     */fish) printf '如需立即在当前终端使用本次安装的 fnos（fish），请运行：\n  fish_add_path "%s"\n' "$bin_dir" ;;
     *) printf '如需立即在当前终端使用本次安装的 fnos（bash/zsh），请运行：\n  %s\n' "$path_line" ;;

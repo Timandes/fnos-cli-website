@@ -52,6 +52,8 @@ npm run serve
 
 已有 npm 原生安装时，只有原生命令目录不在 PATH 中才会补充配置。更新成功并验证入口后，会移除旧安装器写入的独立目录 PATH 优先设置；Unix 仅移除精确匹配的 `# fnos-cli` 配置块，Windows 仅移除该安装器的旧 bin 项，其他用户配置保留。旧独立安装文件不会自动删除。手工设置的旧 PATH 如果仍遮蔽原生命令，脚本会给出切换指引。
 
+Unix 已有 npm 的命令目录位于 PATH 时（例如 nvm 环境），不再提示手动添加 PATH；如果仅清理了旧安装器的路径配置，只提示重新打开终端。
+
 Windows 的 npm 原生安装可能同时生成 `fnos.ps1`，PowerShell 执行策略受限时请使用脚本提示的 `fnos.cmd --help` 或完整 CMD 入口路径，无需修改执行策略。
 
 自动下载依赖可访问 Node.js 官网和 npm registry 的网络，以及受 Node.js 24 官方二进制支持的系统版本。Linux 需要兼容的 glibc；Alpine/musl、旧系统或其他架构请先自行准备符合要求的 Node.js/npm，再安装 CLI。Unix 需要 Bash、curl（直接下载脚本后可用 wget）、tar/gzip，以及 sha256sum 或 shasum。Windows CMD 页面命令直接使用系统自带 PowerShell，无需预装 curl。
