@@ -1,10 +1,34 @@
 import {useEffect, useState, type ReactNode} from 'react';
 import Layout from '@theme/Layout';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import styles from './index.module.css';
 
 const githubUrl = 'https://github.com/Timandes/fnos-cli';
 const npmUrl = 'https://www.npmjs.com/package/fnos-cli';
 const installCommand = 'npm install -g fnos-cli';
+const installers = [
+  {
+    value: 'windows-cmd', label: 'Windows CMD', script: '/install.cmd',
+    command: 'powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://fnos.timandes.net/install.ps1 -ErrorAction Stop | iex"',
+    help: '打开「命令提示符」，粘贴命令并按回车。适用于 Windows 10 / 11，支持 x64 和 ARM64。',
+  },
+  {
+    value: 'windows-powershell', label: 'Windows PowerShell', script: '/install.ps1',
+    command: 'irm https://fnos.timandes.net/install.ps1 -ErrorAction Stop | iex',
+    help: '打开 PowerShell，粘贴命令并按回车。适用于 Windows PowerShell 5.1 及以上版本，支持 x64 和 ARM64。',
+  },
+  {
+    value: 'linux', label: 'Linux', script: '/install.sh',
+    command: 'curl -fsSL https://fnos.timandes.net/install.sh -o fnos-install.sh && bash fnos-install.sh',
+    help: '打开终端，粘贴命令并按回车。需要 Bash 和 curl，支持使用 glibc 的 x64 / ARM64 发行版。',
+  },
+  {
+    value: 'macos', label: 'macOS', script: '/install.sh',
+    command: 'curl -fsSL https://fnos.timandes.net/install.sh -o fnos-install.sh && bash fnos-install.sh',
+    help: '打开「终端」，粘贴命令并按回车。支持 Apple 芯片和 Intel Mac。',
+  },
+];
 
 const features = [
   {title: '多设备连接', description: '命名保存不同 server，按需切换。'},
@@ -28,7 +52,7 @@ function CopyIcon({copied}: {copied: boolean}) {
   );
 }
 
-export default function Home(): ReactNode {
+function CommandBlock({command, label, feedbackId}: {command: string; label: string; feedbackId: string}) {
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle');
 
   useEffect(() => {
@@ -39,13 +63,29 @@ export default function Home(): ReactNode {
 
   async function copyInstallCommand() {
     try {
-      await navigator.clipboard.writeText(installCommand);
+      await navigator.clipboard.writeText(command);
       setCopyState('copied');
     } catch {
       setCopyState('error');
     }
   }
 
+  return (
+    <>
+      <div className={styles.install}>
+        <code className={styles.installCode}>{command}</code>
+        <button type="button" className={`${styles.copyButton} ${copyState === 'copied' ? styles.copied : ''}`} onClick={copyInstallCommand} aria-label={copyState === 'copied' ? `${label}已复制` : `复制${label}`} aria-describedby={feedbackId}>
+          <CopyIcon copied={copyState === 'copied'} />
+        </button>
+      </div>
+      <p id={feedbackId} role="status" aria-live="polite" className={copyState === 'error' ? styles.copyError : styles.srOnly}>
+        {copyState === 'copied' ? `${label}已复制。` : copyState === 'error' ? '复制未成功，请选中上方命令手动复制。' : ''}
+      </p>
+    </>
+  );
+}
+
+export default function Home(): ReactNode {
   return (
     <Layout title="用命令行，连接你的飞牛 fnOS" description="飞牛 fnOS 的命令行客户端。查询系统状态，管理多台设备，让日常操作融入脚本。" noFooter>
       <div className={styles.page}>
@@ -75,16 +115,27 @@ export default function Home(): ReactNode {
           </section>
 
           <section className={styles.commands} aria-label="安装与命令示例">
-            <div id="install" className={styles.install}>
-              <span className={styles.installLabel}>安装</span>
-              <code className={styles.installCode}>{installCommand}</code>
-              <button type="button" className={`${styles.copyButton} ${copyState === 'copied' ? styles.copied : ''}`} onClick={copyInstallCommand} aria-label={copyState === 'copied' ? '安装命令已复制' : '复制安装命令'} aria-describedby="copy-feedback">
-                <CopyIcon copied={copyState === 'copied'} />
-              </button>
+            <div id="install" className={styles.installer}>
+              <h2>一键安装</h2>
+              <p className={styles.installIntro}>选择你的系统，复制命令到对应终端运行。脚本会自动补齐 Node.js 和 npm，并安装 fnos-cli，无需管理员权限。</p>
+              <Tabs defaultValue="windows-cmd">
+                {installers.map(installer => (
+                  <TabItem key={installer.value} value={installer.value} label={installer.label}>
+                    <CommandBlock command={installer.command} label={`${installer.label} 安装命令`} feedbackId={`${installer.value}-feedback`} />
+                    <div className={styles.installHelp}>
+                      <p>{installer.help}</p>
+                      <a href={installer.script} download>下载安装脚本 <span aria-hidden="true">↓</span></a>
+                    </div>
+                  </TabItem>
+                ))}
+              </Tabs>
+              <p className={styles.installNote}>首次安装需要联网下载依赖，请耐心等待。完成后重新打开终端，运行 <code>fnos --help</code> 即可开始。</p>
             </div>
-            <p id="copy-feedback" role="status" aria-live="polite" className={copyState === 'error' ? styles.copyError : styles.srOnly}>
-              {copyState === 'copied' ? '安装命令已复制。' : copyState === 'error' ? '复制未成功，请选中上方命令手动复制。' : ''}
-            </p>
+            <div className={styles.npmInstall}>
+              <h2>已经拥有 npm？使用 npm 安装</h2>
+              <p>需要 Node.js 18.17 或更高版本、npm 8 或更高版本。</p>
+              <CommandBlock command={installCommand} label="npm 安装命令" feedbackId="npm-feedback" />
+            </div>
             <div className={styles.examples}>
               <h2>示例命令</h2>
               <div className={styles.codeScroll}>

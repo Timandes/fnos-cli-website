@@ -1,0 +1,53 @@
+name: Verify website and installers
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+
+  unix-install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install from scratch in an isolated home
+        shell: bash
+        run: |
+          task_home="$RUNNER_TEMP/fnos installer home"
+          task_tools="$RUNNER_TEMP/fnos-installer-tools"
+          mkdir -p "$task_home" "$task_tools"
+          # Model an unavailable runtime even if the runner ships with Node/npm.
+          printf '#!/bin/sh\nexit 127\n' > "$task_tools/node"
+          cp "$task_tools/node" "$task_tools/npm"
+          chmod +x "$task_tools/node" "$task_tools/npm"
+          env HOME="$task_home" SHELL=/bin/bash PATH="$task_tools:/usr/bin:/bin" /bin/bash static/install.sh
+          "$task_home/.local/share/fnos-cli/bin/fnos" --version
+          "$task_home/.local/share/fnos-cli/bin/fnos" --help
+
+  windows-install:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and repeat in an isolated user directory
+        shell: powershell
+        run: ./tests/windows-installers.ps1

@@ -1,5 +1,19 @@
 # 首页交付验证
 
+## 2026-10-29 跨平台安装更新
+
+- 四个 Tab：Windows CMD、Windows PowerShell、Linux、macOS；下方独立提供 npm 直装命令及复制反馈。
+- 正式站点 URL 已设为 `https://fnos.timandes.net/`；`install.sh`、`install.ps1`、`install.cmd` 随构建发布到根目录。
+- 最终 `npm test` 14/14 通过；`npm run typecheck`、`npm run build`、`bash -n static/install.sh`、`git diff --check` 通过。构建脚本与源文件逐字节一致，CI YAML 可解析。
+- 浏览器实测四种安装命令、复制的准确内容、npm 独立复制、拒绝剪贴板后的提示、键盘切换；360px 时页面无横向溢出，四个 Tab 以两列全部展示。测试注入已通过重载恢复，viewport 已复原。
+- 独立只读审阅及修复复核通过；Windows 使用 ASCII 相对路径启动器，避免中文用户路径的控制台码页问题。
+- macOS 隔离 HOME 复用当前 Node/npm，真实安装 fnos-cli 0.5.1，`--version`、`--help` 成功。未访问 NAS 或读取认证配置。
+- 从无 Node 环境启动的真实完整安装因官方下载协议错误和慢速超时未完成；已增加 HTTP/1.1、进度、重试及断点续传。Windows/Linux 的真实执行仍需已配置的 CI 验证，尚未运行 CI。
+- 初次交付时位于 `feature/cross-platform-installers`，未提交、推送或部署。本地生产预览为 `http://127.0.0.1:3002/`。
+- 后续用户授权提交主干并推送全部 remote；集成顺序为功能分支 → `develop` → `main`，同步 `origin` 和 `codeup` 的 `develop` / `main`。推送会触发仓库配置的 CI，实际安装结果以 CI 为准。
+
+## 初次首页交付记录
+
 - 项目：`/Users/timandes/Projects/fnos/fnos-cli-website`。
 - 服务：`http://127.0.0.1:3000/`，已在内置浏览器打开并保留；开发服务保持运行。
 - 最终代码的 `npm run typecheck` 和 `npm run build` 均退出 0。
