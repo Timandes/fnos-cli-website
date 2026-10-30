@@ -48,6 +48,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify Chinese bootstrap and error output offline
+        shell: powershell
+        run: ./tests/windows-installers.ps1 -EncodingOnly
       - name: Install and repeat in an isolated user directory
         shell: powershell
         run: ./tests/windows-installers.ps1

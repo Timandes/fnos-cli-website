@@ -110,7 +110,7 @@ test('failed npm installation exits nonzero and never reports success', t => {
   const f = fixture(t);
   const result = f.run({FAIL_NPM: '1'});
   assert.notEqual(result.status, 0);
-  assert.doesNotMatch(result.stdout, /Installation complete/);
+  assert.doesNotMatch(result.stdout, /安装完成/);
 });
 
 for (const extra of [{FAIL_DOWNLOAD: '1'}, {BAD_HASH: '0'.repeat(64)}]) {
@@ -119,7 +119,7 @@ for (const extra of [{FAIL_DOWNLOAD: '1'}, {BAD_HASH: '0'.repeat(64)}]) {
     const result = f.run(extra);
     assert.notEqual(result.status, 0);
     assert.ok(!existsSync(path.join(f.home, '.local/share/fnos-cli/npm')));
-    assert.doesNotMatch(result.stdout, /Installation complete/);
+    assert.doesNotMatch(result.stdout, /安装完成/);
   });
 }
 
@@ -127,7 +127,7 @@ test('unsupported architecture fails with an actionable error before downloading
   const f = fixture(t, {runtime: 'missing', arch: 'riscv64'});
   const result = f.run();
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /architecture/i);
+  assert.match(result.stderr, /架构/);
 });
 
 for (const [platform, arch] of [['Darwin', 'arm64'], ['Darwin', 'x86_64'], ['Linux', 'aarch64']]) {

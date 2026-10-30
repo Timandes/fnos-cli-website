@@ -40,6 +40,8 @@ npm run serve
 
 脚本复用 Node.js >=18.17、npm >=8；缺失、版本过低或无法运行时，从 `nodejs.org` 下载 Node.js 24 LTS（含 npm），通过官方 SHA-256 清单校验后解压。CLI 从 npm 安装最新发布版，完成前执行 `fnos --version`，失败返回非零。
 
+安装脚本自身的进度、成功、错误和操作指引均使用简体中文。PowerShell 文件保存为 UTF-8 BOM，网页与 CMD 入口按 UTF-8 解码下载内容，兼容 Windows PowerShell 5.1；CMD 使用 UTF-8 显示中文，结束时恢复原控制台代码页。npm、下载器或系统返回的原始技术诊断保持原文。
+
 安装采用独立的用户目录，不需要管理员权限，也不修改已有 Node.js 和全局 npm 配置：
 
 - Linux/macOS：`~/.local/share/fnos-cli/`；按当前 shell 将 `bin` 加入 `.zshrc`（尊重 `ZDOTDIR`）、Bash 启动文件或 Fish `conf.d`。
