@@ -13,7 +13,7 @@
 - 自动下载支持 Linux/macOS x64、ARM64，Windows x64、ARM64；不支持的平台/架构或系统库条件不满足时清楚报错。
 - 使用用户目录下的独立 npm prefix 和启动入口，避免管理员权限、全局 npm 配置和原有 Node.js 安装的变更。仅将 fnos 入口加入用户 PATH，Unix 按 shell 写入启动文件，Windows 更新用户 PATH。
 - 完成前执行已安装的 CLI `--version`，失败返回非零并给出提示；重复运行不会重复写 PATH。新终端可直接运行 `fnos --help`。
-- 正式站点和全部远程脚本地址使用 `https://fnos.timandes.net/`；不包含部署和远程 Git 推送。
+- 正式站点和全部远程脚本地址使用 `https://fnos.timandes.cn/`；不包含部署和远程 Git 推送。
 
 ## 验证
 

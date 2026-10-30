@@ -10,22 +10,22 @@ const installCommand = 'npm install -g fnos-cli';
 const installers = [
   {
     value: 'windows-cmd', label: 'Windows CMD', script: '/install.cmd',
-    command: 'powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://fnos.timandes.net/install.ps1 -ErrorAction Stop | iex"',
+    command: 'powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://fnos.timandes.cn/install.ps1 -ErrorAction Stop | iex"',
     help: '打开「命令提示符」，粘贴命令并按回车。适用于 Windows 10 / 11，支持 x64 和 ARM64。',
   },
   {
     value: 'windows-powershell', label: 'Windows PowerShell', script: '/install.ps1',
-    command: 'irm https://fnos.timandes.net/install.ps1 -ErrorAction Stop | iex',
+    command: 'irm https://fnos.timandes.cn/install.ps1 -ErrorAction Stop | iex',
     help: '打开 PowerShell，粘贴命令并按回车。适用于 Windows PowerShell 5.1 及以上版本，支持 x64 和 ARM64。',
   },
   {
     value: 'linux', label: 'Linux', script: '/install.sh',
-    command: 'curl -fsSL https://fnos.timandes.net/install.sh -o fnos-install.sh && bash fnos-install.sh',
+    command: 'curl -fsSL https://fnos.timandes.cn/install.sh -o fnos-install.sh && bash fnos-install.sh',
     help: '打开终端，粘贴命令并按回车。需要 Bash 和 curl，支持使用 glibc 的 x64 / ARM64 发行版。',
   },
   {
     value: 'macos', label: 'macOS', script: '/install.sh',
-    command: 'curl -fsSL https://fnos.timandes.net/install.sh -o fnos-install.sh && bash fnos-install.sh',
+    command: 'curl -fsSL https://fnos.timandes.cn/install.sh -o fnos-install.sh && bash fnos-install.sh',
     help: '打开「终端」，粘贴命令并按回车。支持 Apple 芯片和 Intel Mac。',
   },
 ];
