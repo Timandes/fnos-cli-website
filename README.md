@@ -30,7 +30,7 @@ npm run serve
 
 ## 跨平台安装
 
-首页提供 Windows CMD、Windows PowerShell、Linux、macOS 四个 Tab，可复制命令并下载脚本。下方独立提供已有 npm 用户使用的 `npm install -g fnos-cli`。
+首页提供 Windows CMD、Windows PowerShell、Linux、macOS 四个 Tab，可获取安装命令并下载脚本。下方独立提供已有 npm 用户使用的 `npm install -g fnos-cli`。
 
 Linux/macOS 使用管道直接执行在线脚本，命令不会在当前目录生成 `fnos-install.sh`：
 
@@ -78,7 +78,9 @@ Windows 的 npm 原生安装可能同时生成 `fnos.ps1`，PowerShell 执行策
 - `static/install.*`：发布到站点根目录的安装脚本。
 - `tests/`：隔离安装测试和 Windows 集成验证。
 
-安装命令可一键复制；浏览器不支持剪贴板或拒绝权限时，页面会提示手动选择复制。GitHub 与 npm 链接在新标签页打开。
+Windows 两个 Tab 使用「选择命令」选中完整内容，由用户按 Ctrl+C（Mac 用 ⌘C）完成原生复制；网页不主动将 PowerShell 安装命令写入剪贴板，避免触发此类剪贴板写入的 ClickFix 保护。选择后只提示「已选中」，不误报「已复制」。命令保持原文，仍在内存执行，不额外生成安装脚本文件。
+
+Linux、macOS 和 npm 命令保留一键复制；浏览器不支持剪贴板或拒绝权限时，页面会提示手动选择复制。GitHub 与 npm 链接在新标签页打开。
 
 ## 项目链接
 
