@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- 正式 URL `https://fnos.timandes.net/`，不执行部署或推送。
+- 正式 URL `https://fnos.timandes.cn/`，不执行部署或推送。
 - 复用 Node.js >=18.17、npm >=8，否则下载 Node.js 24 LTS 并验证 SHA-256。
 - 自动下载支持 x64、ARM64，安装至用户目录，不要求 sudo，不变更全局 npm 配置。
 - 中文页面，四个 Tab，下方保留 `npm install -g fnos-cli`。

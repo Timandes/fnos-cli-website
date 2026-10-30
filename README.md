@@ -26,7 +26,7 @@ npm run build
 npm run serve
 ```
 
-静态产物位于 `build/`，正式站点配置为 `https://fnos.timandes.net/`。部署时上传整个目录，包括根目录的三个安装脚本；不要把脚本请求重写成首页 HTML。
+静态产物位于 `build/`，正式站点配置为 `https://fnos.timandes.cn/`。部署时上传整个目录，包括根目录的三个安装脚本；不要把脚本请求重写成首页 HTML。
 
 ## 跨平台安装
 
@@ -34,9 +34,9 @@ npm run serve
 
 | 入口 | 用途 |
 | --- | --- |
-| `https://fnos.timandes.net/install.cmd` | Windows CMD，引导至同站 PowerShell 安装器 |
-| `https://fnos.timandes.net/install.ps1` | Windows PowerShell 5.1+，x64 / ARM64 |
-| `https://fnos.timandes.net/install.sh` | Linux / macOS，Bash 3.2+，x64 / ARM64 |
+| `https://fnos.timandes.cn/install.cmd` | Windows CMD，引导至同站 PowerShell 安装器 |
+| `https://fnos.timandes.cn/install.ps1` | Windows PowerShell 5.1+，x64 / ARM64 |
+| `https://fnos.timandes.cn/install.sh` | Linux / macOS，Bash 3.2+，x64 / ARM64 |
 
 脚本复用 Node.js >=18.17、npm >=8；缺失、版本过低或无法运行时，从 `nodejs.org` 下载 Node.js 24 LTS（含 npm），通过官方 SHA-256 清单校验后解压。CLI 从 npm 安装最新发布版，完成前执行 `fnos --version`，失败返回非零。
 
