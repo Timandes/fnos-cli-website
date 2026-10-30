@@ -38,15 +38,21 @@ npm run serve
 | `https://fnos.timandes.cn/install.ps1` | Windows PowerShell 5.1+，x64 / ARM64 |
 | `https://fnos.timandes.cn/install.sh` | Linux / macOS，Bash 3.2+，x64 / ARM64 |
 
-脚本复用 Node.js >=18.17、npm >=8；缺失、版本过低或无法运行时，从 `nodejs.org` 下载 Node.js 24 LTS（含 npm），通过官方 SHA-256 清单校验后解压。CLI 从 npm 安装最新发布版，完成前执行 `fnos --version`，失败返回非零。
+脚本优先复用 Node.js >=18.17、npm >=8，读取当前 `npm prefix --global` 和 `npm root --global`，在当前 npm 环境安装或更新 fnos-cli。nvm 和自定义 npm prefix 均沿用原来的目录，不额外创建独立副本或修改 npm 配置。完成前验证实际启动入口，版本号只显示一次，并显示安装路径。
+
+缺少兼容运行环境时，才从 `nodejs.org` 下载 Node.js 24 LTS（含 npm），通过官方 SHA-256 清单校验后安装到独立用户目录。已有 Node/npm 但全局目录不可写时，仅在未检测到 fnos 的情况下使用独立目录；已安装 fnos 却无法更新时会明确报错，不会静默换目录另装一份。
 
 安装脚本自身的进度、成功、错误和操作指引均使用简体中文。PowerShell 文件保存为 UTF-8 BOM，网页与 CMD 入口按 UTF-8 解码下载内容，兼容 Windows PowerShell 5.1；CMD 使用 UTF-8 显示中文，结束时恢复原控制台代码页。npm、下载器或系统返回的原始技术诊断保持原文。
 
-安装采用独立的用户目录，不需要管理员权限，也不修改已有 Node.js 和全局 npm 配置：
+独立安装不需要管理员权限，也不修改已有 Node.js 和全局 npm 配置：
 
 - Linux/macOS：`~/.local/share/fnos-cli/`；按当前 shell 将 `bin` 加入 `.zshrc`（尊重 `ZDOTDIR`）、Bash 启动文件或 Fish `conf.d`。
 - Windows：`%LOCALAPPDATA%\fnos-cli\`；将 `bin` 加入用户 PATH，仅暴露 `fnos.cmd`，避免 npm 生成的 PowerShell 启动脚本受执行策略阻挡。
 - 安装完重新打开终端，再运行 `fnos --help`。脚本也会显示当前窗口立即使用的方法。重复运行可更新 CLI，不重复添加 PATH。
+
+已有 npm 原生安装时，只有原生命令目录不在 PATH 中才会补充配置。更新成功并验证入口后，会移除旧安装器写入的独立目录 PATH 优先设置；Unix 仅移除精确匹配的 `# fnos-cli` 配置块，Windows 仅移除该安装器的旧 bin 项，其他用户配置保留。旧独立安装文件不会自动删除。手工设置的旧 PATH 如果仍遮蔽原生命令，脚本会给出切换指引。
+
+Windows 的 npm 原生安装可能同时生成 `fnos.ps1`，PowerShell 执行策略受限时请使用脚本提示的 `fnos.cmd --help` 或完整 CMD 入口路径，无需修改执行策略。
 
 自动下载依赖可访问 Node.js 官网和 npm registry 的网络，以及受 Node.js 24 官方二进制支持的系统版本。Linux 需要兼容的 glibc；Alpine/musl、旧系统或其他架构请先自行准备符合要求的 Node.js/npm，再安装 CLI。Unix 需要 Bash、curl（直接下载脚本后可用 wget）、tar/gzip，以及 sha256sum 或 shasum。Windows CMD 页面命令直接使用系统自带 PowerShell，无需预装 curl。
 
