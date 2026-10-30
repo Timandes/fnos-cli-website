@@ -95,6 +95,8 @@ if "%FNOS_TEST_NPM_MODE%"=="blocked-prefix" if "%~1"=="prefix" (
 call "%FNOS_TEST_REAL_NPM%" %*
 exit /b %errorlevel%
 '@
+        # CMD control-flow fixtures need CRLF regardless of the PS1 checkout EOL.
+        $wrapper = $wrapper.Replace("`r`n", "`n").Replace("`n", "`r`n") + "`r`n"
         [IO.File]::WriteAllText((Join-Path $npmWrapperDir 'npm.cmd'), $wrapper, [Text.Encoding]::ASCII)
         $env:PATH = "$npmWrapperDir;$env:PATH"
         [Environment]::SetEnvironmentVariable('Path', "$globalPrefix;$keepPath", 'User')
