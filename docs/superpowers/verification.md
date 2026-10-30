@@ -1,5 +1,13 @@
 # 首页交付验证
 
+## 2026-10-30 Windows 原生选择复制
+
+- 针对用户报告的 uBlock Origin ClickFix 提示，Windows CMD/PowerShell 改为「选择命令」后由用户按快捷键完成原生复制；保留透明命令、自动补齐依赖及内存执行，不改浏览器防护设置。
+- 修改前用本地浏览器剪贴板阻断替身复现了网页写入被拦截后仍显示「已复制」；修改后两个 Windows Tab 都选择完整命令并聚焦代码，写入接口调用次数为零，真实 ⌘C 复制文本准确，Enter 激活也通过。
+- Linux 和 npm 一键复制、macOS 剪贴板权限拒绝后的手动指引均已实测；测试注入通过页面重载恢复。未安装或关闭浏览器扩展，验证基于上游接口行为及本地拦截替身，不等同于特定 uBlock 版本的实机测试。
+- 独立只读审阅未发现阻断问题；已按建议使无障碍名称包含完整可见按钮文字「选择命令」。
+- `npm test` 25/25、`npm run typecheck`、`npm run build`、`git diff --check` 通过。
+
 ## 2026-10-30 管道安装命令
 
 - Linux/macOS 的显示与复制命令改为 `curl -fsSL https://fnos.timandes.cn/install.sh | bash`，不再先保存 `fnos-install.sh`；保留 Bash 兼容要求及可选的手动下载链接。
