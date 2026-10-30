@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState, type ReactNode} from 'react';
+import {useEffect, useState, type ReactNode} from 'react';
 import Layout from '@theme/Layout';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -9,12 +9,12 @@ const npmUrl = 'https://www.npmjs.com/package/fnos-cli';
 const installCommand = 'npm install -g fnos-cli';
 const installers = [
   {
-    value: 'windows-cmd', label: 'Windows CMD', script: '/install.cmd', manualCopy: true,
+    value: 'windows-cmd', label: 'Windows CMD', script: '/install.cmd',
     command: 'powershell -NoProfile -ExecutionPolicy Bypass -Command "[Text.Encoding]::UTF8.GetString((iwr -UseBasicParsing https://fnos.timandes.cn/install.ps1 -ErrorAction Stop).RawContentStream.ToArray()).TrimStart([char]0xfeff) | iex"',
     help: '打开「命令提示符」，粘贴命令并按回车。适用于 Windows 10 / 11，支持 x64 和 ARM64。',
   },
   {
-    value: 'windows-powershell', label: 'Windows PowerShell', script: '/install.ps1', manualCopy: true,
+    value: 'windows-powershell', label: 'Windows PowerShell', script: '/install.ps1',
     command: '[Text.Encoding]::UTF8.GetString((iwr -UseBasicParsing https://fnos.timandes.cn/install.ps1 -ErrorAction Stop).RawContentStream.ToArray()).TrimStart([char]0xfeff) | iex',
     help: '打开 PowerShell，粘贴命令并按回车。适用于 Windows PowerShell 5.1 及以上版本，支持 x64 和 ARM64。',
   },
@@ -52,9 +52,8 @@ function CopyIcon({copied}: {copied: boolean}) {
   );
 }
 
-function CommandBlock({command, label, feedbackId, manualCopy = false}: {command: string; label: string; feedbackId: string; manualCopy?: boolean}) {
-  const commandRef = useRef<HTMLElement>(null);
-  const [copyState, setCopyState] = useState<'idle' | 'selected' | 'copied' | 'error'>('idle');
+function CommandBlock({command, label, feedbackId}: {command: string; label: string; feedbackId: string}) {
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle');
 
   useEffect(() => {
     if (copyState !== 'copied') return;
@@ -62,22 +61,7 @@ function CommandBlock({command, label, feedbackId, manualCopy = false}: {command
     return () => window.clearTimeout(timeout);
   }, [copyState]);
 
-  async function handleCommandAction() {
-    if (manualCopy) {
-      const code = commandRef.current;
-      const selection = window.getSelection();
-      if (!code || !selection) {
-        setCopyState('error');
-        return;
-      }
-      code.focus({preventScroll: true});
-      const range = document.createRange();
-      range.selectNodeContents(code);
-      selection.removeAllRanges();
-      selection.addRange(range);
-      setCopyState('selected');
-      return;
-    }
+  async function copyInstallCommand() {
     try {
       await navigator.clipboard.writeText(command);
       setCopyState('copied');
@@ -89,13 +73,13 @@ function CommandBlock({command, label, feedbackId, manualCopy = false}: {command
   return (
     <>
       <div className={styles.install}>
-        <code ref={commandRef} tabIndex={manualCopy ? 0 : undefined} className={styles.installCode}>{command}</code>
-        <button type="button" className={`${styles.copyButton} ${manualCopy ? styles.selectButton : ''} ${copyState === 'copied' ? styles.copied : ''}`} onClick={handleCommandAction} aria-label={manualCopy ? `选择命令：${label}` : copyState === 'copied' ? `${label}已复制` : `复制${label}`} aria-describedby={feedbackId}>
-          {manualCopy ? '选择命令' : <CopyIcon copied={copyState === 'copied'} />}
+        <code className={styles.installCode}>{command}</code>
+        <button type="button" className={`${styles.copyButton} ${copyState === 'copied' ? styles.copied : ''}`} onClick={copyInstallCommand} aria-label={copyState === 'copied' ? `${label}已复制` : `复制${label}`} aria-describedby={feedbackId}>
+          <CopyIcon copied={copyState === 'copied'} />
         </button>
       </div>
-      <p id={feedbackId} role="status" aria-live="polite" className={copyState === 'error' ? styles.copyError : manualCopy ? styles.copyHint : styles.srOnly}>
-        {copyState === 'error' ? '请手动选中上方命令并复制。' : manualCopy ? copyState === 'selected' ? '命令已选中，请按 Ctrl+C（Mac 用 ⌘C）复制，再粘贴到终端运行。' : '点击「选择命令」，再按 Ctrl+C（Mac 用 ⌘C）复制。' : copyState === 'copied' ? `${label}已复制。` : ''}
+      <p id={feedbackId} role="status" aria-live="polite" className={copyState === 'error' ? styles.copyError : styles.srOnly}>
+        {copyState === 'copied' ? `${label}已复制。` : copyState === 'error' ? '复制未成功，请选中上方命令手动复制。' : ''}
       </p>
     </>
   );
@@ -137,7 +121,7 @@ export default function Home(): ReactNode {
               <Tabs defaultValue="windows-cmd">
                 {installers.map(installer => (
                   <TabItem key={installer.value} value={installer.value} label={installer.label}>
-                    <CommandBlock command={installer.command} label={`${installer.label} 安装命令`} feedbackId={`${installer.value}-feedback`} manualCopy={installer.manualCopy} />
+                    <CommandBlock command={installer.command} label={`${installer.label} 安装命令`} feedbackId={`${installer.value}-feedback`} />
                     <div className={styles.installHelp}>
                       <p>{installer.help}</p>
                       <a href={installer.script} download>下载安装脚本 <span aria-hidden="true">↓</span></a>
