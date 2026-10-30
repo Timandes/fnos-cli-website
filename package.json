@@ -5,6 +5,7 @@
   "description": "fnos-cli 的极简中文门户",
   "license": "Apache-2.0",
   "scripts": {
+    "test": "node --test tests/*.test.mjs",
     "start": "docusaurus start --host 127.0.0.1",
     "build": "docusaurus build",
     "serve": "docusaurus serve --host 127.0.0.1",
