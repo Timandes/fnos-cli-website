@@ -16,6 +16,7 @@ $powershellExe = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powe
 New-Item -ItemType Directory -Path $testRoot | Out-Null
 
 function Invoke-Installer([string]$name, [bool]$expectSuccess = $true, [string]$expectedError = '安装失败：找不到 LOCALAPPDATA 环境变量') {
+    Write-Host "Installer case: $name"
     $stdout = Join-Path $testRoot "$name.stdout"
     $stderr = Join-Path $testRoot "$name.stderr"
     $process = Start-Process -FilePath $powershellExe -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ('"' + $installer + '"')) -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
@@ -26,7 +27,7 @@ function Invoke-Installer([string]$name, [bool]$expectSuccess = $true, [string]$
         if ($process.ExitCode -ne 0) { throw "Installer failed ($($process.ExitCode)): $errorOutput" }
         if ($output -notmatch '安装完成') { throw 'Missing Chinese completion message.' }
     } else {
-        if ($process.ExitCode -eq 0) { throw 'Installer unexpectedly succeeded.' }
+        if ($process.ExitCode -eq 0) { throw "Installer unexpectedly succeeded: $name." }
         if ($errorOutput -notmatch $expectedError) { throw "Unexpected or corrupted Chinese error output: $errorOutput" }
     }
     return $output
@@ -49,6 +50,50 @@ function Test-WebBootstrapEncoding {
     function Invoke-RestMethod { throw 'Bootstrap must decode the raw script bytes explicitly.' }
     $decodedOutput = & ([scriptblock]::Create($match.Groups[1].Value))
     if ($decodedOutput -ne '下载脚本中的简体中文提示') { throw 'Downloaded Chinese script was decoded incorrectly.' }
+}
+
+function Write-NpmWrapper([string]$target) {
+    # Keep EXIT /B outside compound blocks so cmd /c preserves the process exit code.
+    $wrapper = @'
+@echo off
+if "%~1"=="install" >>"%FNOS_TEST_NPM_LOG%" echo %*
+if "%~1"=="install" if "%FNOS_TEST_NPM_MODE%"=="fail-install" exit /b 73
+if "%~1"=="install" if "%FNOS_TEST_NPM_MODE%"=="skip-install" exit /b 0
+if "%FNOS_TEST_NPM_MODE%"=="blocked-prefix" if "%~1"=="prefix" (
+  "%FNOS_TEST_NODE%" -e "process.stdout.write(process.env.FNOS_TEST_BLOCKED_PREFIX)"
+  exit /b 0
+)
+call "%FNOS_TEST_REAL_NPM%" %*
+exit /b %errorlevel%
+'@
+    [IO.File]::WriteAllText($target, $wrapper, [Text.Encoding]::ASCII)
+}
+
+function Test-NpmFailureFixture {
+    $wrapperPath = Join-Path $testRoot 'offline-npm.cmd'
+    $realNpm = Join-Path $testRoot 'offline-real-npm.cmd'
+    $savedExitCode = $global:LASTEXITCODE
+    $savedVariables = @{}
+    'FNOS_TEST_NPM_LOG', 'FNOS_TEST_REAL_NPM', 'FNOS_TEST_NPM_MODE' | ForEach-Object {
+        $savedVariables[$_] = [Environment]::GetEnvironmentVariable($_)
+    }
+    try {
+        $env:FNOS_TEST_NPM_LOG = Join-Path $testRoot 'offline-npm.log'
+        $env:FNOS_TEST_REAL_NPM = $realNpm
+        [IO.File]::WriteAllText($realNpm, "@echo off`r`n>>`"%FNOS_TEST_NPM_LOG%`" echo unexpected-real-npm`r`nexit /b 0`r`n", [Text.Encoding]::ASCII)
+        Write-NpmWrapper $wrapperPath
+        $env:FNOS_TEST_NPM_MODE = 'fail-install'
+        & $wrapperPath install --global fnos-cli@latest
+        if ($LASTEXITCODE -ne 73) { throw "Offline npm fixture returned $LASTEXITCODE instead of 73." }
+        $env:FNOS_TEST_NPM_MODE = 'skip-install'
+        & $wrapperPath install --global fnos-cli@latest
+        if ($LASTEXITCODE -ne 0) { throw "Skipped npm fixture returned $LASTEXITCODE instead of 0." }
+        if ((Get-Content -LiteralPath $env:FNOS_TEST_NPM_LOG -Raw) -match 'unexpected-real-npm') { throw 'Failure fixture unexpectedly delegated to npm.' }
+        Write-Host 'Windows npm failure fixture checks passed.'
+    } finally {
+        foreach ($name in $savedVariables.Keys) { [Environment]::SetEnvironmentVariable($name, $savedVariables[$name]) }
+        $global:LASTEXITCODE = $savedExitCode
+    }
 }
 
 function Test-ExistingNpmInstallation([string]$runtimePath, [string]$privatePrefix) {
@@ -80,21 +125,7 @@ function Test-ExistingNpmInstallation([string]$runtimePath, [string]$privatePref
         [IO.File]::WriteAllText($env:FNOS_TEST_BLOCKED_PREFIX, 'not a directory', [Text.Encoding]::ASCII)
         # A CMD wrapper delegates to real npm except for explicit failure cases.
         # Use environment variables so its source remains ASCII under Chinese paths.
-        $wrapper = @'
-@echo off
-if "%~1"=="install" (
-  >>"%FNOS_TEST_NPM_LOG%" echo %*
-  if "%FNOS_TEST_NPM_MODE%"=="fail-install" exit /b 73
-  if "%FNOS_TEST_NPM_MODE%"=="skip-install" exit /b 0
-)
-if "%FNOS_TEST_NPM_MODE%"=="blocked-prefix" if "%~1"=="prefix" (
-  "%FNOS_TEST_NODE%" -e "process.stdout.write(process.env.FNOS_TEST_BLOCKED_PREFIX)"
-  exit /b 0
-)
-call "%FNOS_TEST_REAL_NPM%" %*
-exit /b %errorlevel%
-'@
-        [IO.File]::WriteAllText((Join-Path $npmWrapperDir 'npm.cmd'), $wrapper, [Text.Encoding]::ASCII)
+        Write-NpmWrapper (Join-Path $npmWrapperDir 'npm.cmd')
         $env:PATH = "$npmWrapperDir;$env:PATH"
         [Environment]::SetEnvironmentVariable('Path', "$globalPrefix;$keepPath", 'User')
         $output = Invoke-Installer 'existing-npm'
@@ -165,6 +196,8 @@ exit /b %errorlevel%
         try {
             [IO.File]::WriteAllText($nativeLauncher, "@echo off`r`nexit /b 92`r`n", [Text.Encoding]::ASCII)
             $env:FNOS_TEST_NPM_MODE = 'skip-install'
+            & $nativeLauncher --version
+            if ($LASTEXITCODE -ne 92) { throw "Broken launcher fixture returned $LASTEXITCODE instead of 92." }
             Invoke-Installer 'existing-npm-broken-launcher' $false 'fnos-cli 无法运行' | Out-Null
             if ([Environment]::GetEnvironmentVariable('Path', 'User') -ne $beforePath) { throw 'Failed native launcher verification changed the user PATH.' }
             if (Test-Path -LiteralPath (Join-Path $externalProfile 'fnos-cli\npm')) { throw 'Failed native launcher verification created a fallback copy.' }
@@ -198,6 +231,7 @@ exit /b %errorlevel%
 
 try {
     Test-WebBootstrapEncoding
+    Test-NpmFailureFixture
     $env:LOCALAPPDATA = ''
     Invoke-Installer 'chinese-error' $false | Out-Null
     if ($EncodingOnly) { Write-Host 'Windows Chinese encoding checks passed.'; return }
@@ -222,6 +256,8 @@ try {
     & $launcher --version
     if ($LASTEXITCODE -ne 0) { throw 'Launcher failed after repeated installation.' }
     Test-ExistingNpmInstallation $runtime.FullName (Join-Path $installRoot 'npm')
+    # Expected native failures above must not become the Actions step exit code.
+    $global:LASTEXITCODE = 0
     Write-Host 'Windows installation integration checks passed.'
 } finally {
     [Environment]::SetEnvironmentVariable('Path', $originalUserPath, 'User')

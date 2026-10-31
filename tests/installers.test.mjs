@@ -87,10 +87,40 @@ case "$url" in
   https://nodejs.org/dist/v24.1.0/node-v24.1.0-*.tar.gz) cp '${archive}' "$out" ;;
   *) exit 17 ;;
 esac`);
-  const env = {...process.env, HOME: home, SHELL: '/bin/bash', PATH: `${bin}:/usr/bin:/bin`, BASH_ENV: '', ENV: '', FAIL_ONCE: '', FNOS_TEST_PREFIX: globalPrefix};
+  const env = {...process.env, HOME: home, XDG_CONFIG_HOME: path.join(home, '.config'), ZDOTDIR: home, SHELL: '/bin/bash', PATH: `${bin}:/usr/bin:/bin`, BASH_ENV: '', ENV: '', FAIL_ONCE: '', FNOS_TEST_PREFIX: globalPrefix};
   const run = (extra = {}) => spawnSync('/bin/bash', [installer], {env: {...env, ...extra}, encoding: 'utf8'});
   return {home, run, env, globalPrefix, globalRoot};
 }
+
+test('isolates inherited shell configuration directories in installer fixtures', t => {
+  const external = mkdtempSync(path.join(tmpdir(), 'fnos inherited config '));
+  t.after(() => rmSync(external, {recursive: true, force: true}));
+  const externalFish = path.join(external, 'fish/conf.d/fnos-cli.fish');
+  mkdirSync(path.dirname(externalFish), {recursive: true});
+  writeFileSync(externalFish, '# external fish configuration\n');
+  const externalZsh = path.join(external, '.zshrc');
+  writeFileSync(externalZsh, '# external zsh configuration\n');
+  const inherited = {XDG_CONFIG_HOME: process.env.XDG_CONFIG_HOME, ZDOTDIR: process.env.ZDOTDIR};
+  let f;
+  try {
+    process.env.XDG_CONFIG_HOME = external;
+    process.env.ZDOTDIR = external;
+    f = fixture(t);
+  } finally {
+    for (const [key, value] of Object.entries(inherited)) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+  const customPrefix = path.join(f.home, 'custom npm prefix');
+  for (const shell of ['/usr/bin/fish', '/bin/zsh']) {
+    const result = f.run({SHELL: shell, FNOS_TEST_PREFIX: customPrefix});
+    assert.equal(result.status, 0, result.stderr);
+  }
+  assert.equal(readFileSync(externalFish, 'utf8'), '# external fish configuration\n');
+  assert.equal(readFileSync(externalZsh, 'utf8'), '# external zsh configuration\n');
+  assert.match(readFileSync(path.join(f.home, '.config/fish/conf.d/fnos-cli.fish'), 'utf8'), /fish_add_path/);
+  assert.match(readFileSync(path.join(f.home, '.zshrc'), 'utf8'), /export PATH=/);
+});
 
 test('updates existing fnos in the active npm environment without a private copy or PATH edits', t => {
   const f = fixture(t, {installed: true, platform: 'Darwin', arch: 'arm64'});

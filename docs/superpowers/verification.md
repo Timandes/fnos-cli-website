@@ -6,6 +6,15 @@
 - 使用下载的上游现行过滤列表验证：本站和 uv 的 Windows 安装命令均匹配通用 ClickFix 规则，但 `astral.sh` 有网页域名例外，`fnos.timandes.cn` 没有。恢复复制交互不等同于消除了 uBlock 误报，后者仍需上游例外处理。
 - 独立只读复核确认撤回完整，页面及安装器与引入手动选择前完全一致；`npm test` 25/25、`npm run typecheck`、`npm run build`、差异检查通过。
 
+## 2026-10-30 安装器 CI 回归修复
+
+- 初始核实 main `8f51a2a` 与 develop `6284597` 文件树一致，两者 CI 仍有相同 fish 和 Windows 失败；任务期间又更新为 main `471c6d2`、develop `7d1c2fc`，文件树仍一致。本地 hotfix 已同步最新 main，保留并行的管道安装命令更新。
+- fish 测试继承了外部 `XDG_CONFIG_HOME`，安装器实际读写路径与断言路径不一致。设置外部配置目录后复现原两项失败；测试夹具现显式隔离 `XDG_CONFIG_HOME` 和 `ZDOTDIR`，新增回归验证外部 fish/zsh 配置逐字节不变。
+- Windows CI 的直接夹具自检证实，模拟失败的 npm CMD 返回 0 而非 73。其括号块内 `exit /b 73` 后还有命令，与 [PowerShell #17936 的 CMD 行为](https://github.com/PowerShell/PowerShell/issues/17936) 相符；改用顶层条件退出，生产安装器不变。离线步骤复用同一夹具验证失败 73、跳过 0 且不调用真实 npm，集成测试仍验证失败后 PATH/原安装不变。
+- 预期失败的原生命令会留下全局退出码；测试成功路径明确清零，避免 GitHub Actions 将夹具的预期失败当作整步失败。
+- 本机默认及外部 XDG/ZDOTDIR 环境完整离线测试均为 26/26；typecheck、build、Bash/Node 语法、差异检查通过。仓库没有 lint 脚本。已推送 `1507063` 和 `c20bb6c` 的 website 与 Linux/macOS 真实安装验证通过；Windows 夹具最终修复尚待 CI 确认。
+- 此前 hotfix 推送被 SSH 认证拒绝（`Permission denied (publickey)`，agent 无身份），远程仍为 `c20bb6c`；草稿 PR 创建被 GitHub 集成 403 拒绝。后续用户授权直接提交、合并 main 并正常推送，替代草稿 PR 交付；重新核对远程 main `86aa5b7`、develop `4ea7235`，相较 `471c6d2` 仅增加上述一键复制验证记录，合并时保留双方文档。SSH agent 仍无身份，未盲目重试；本地 main 整合后仍待恢复现有认证才能推送并验证最终 Windows CI。未部署、发版、强推或更改权限/凭据。
+
 ## 2026-10-30 管道安装命令
 
 - Linux/macOS 的显示与复制命令改为 `curl -fsSL https://fnos.timandes.cn/install.sh | bash`，不再先保存 `fnos-install.sh`；保留 Bash 兼容要求及可选的手动下载链接。
